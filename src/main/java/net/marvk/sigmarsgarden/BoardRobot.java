@@ -17,7 +17,7 @@ import java.util.concurrent.*;
 
 public class BoardRobot {
     private final boolean saveCaptures;
-    private Robot robot;
+    private final Robot robot;
 
     public static void main(final String[] args) throws Exception {
         OpenCV.loadLocally();
@@ -42,23 +42,30 @@ public class BoardRobot {
         System.out.println("CAPTURED BOARD");
 
         System.out.println("READING BOARD...");
-        final Board board = new BoardVision().readBoard(ImageUtil.monochrome(capture));
+        final Board board = new BoardVision().readBoard(
+            ImageUtil.monochrome(capture)
+        );
         System.out.println("READ BOARD");
 
         final ExecutorService executor = Executors.newSingleThreadExecutor();
         final BoardSolver boardSolver = new BoardSolver();
-        final Future<List<Board.Move>> solutionFuture = executor.submit(() -> getSolution(board, boardSolver));
+        final Future<List<Board.Move>> solutionFuture = executor.submit(() ->
+            getSolution(board, boardSolver)
+        );
 
         try {
             System.out.println("SOLVING...");
             final LocalDateTime start = LocalDateTime.now();
-            final List<Board.Move> solution = solutionFuture.get(10, TimeUnit.SECONDS);
-            System.out.println("SOLVED IN %s WITH %d ITERATIONS".formatted(Duration.between(start, LocalDateTime.now()), boardSolver.getIterations()));
+            final List<Board.Move> solution = solutionFuture.get( 3, TimeUnit.SECONDS );
+            System.out.printf( "SOLVED IN %s WITH %d ITERATIONS%n", Duration.between(start, LocalDateTime.now()), boardSolver.getIterations()
+            );
             System.out.println("EXECUTING...");
             executeSolution(solution);
             System.out.println("WE HOPEFULLY DID IT");
-            robot.delay(100);
-        } catch (InterruptedException | TimeoutException | ExecutionException ignored) {
+            robot.delay(300);
+        } catch (
+                InterruptedException | TimeoutException | ExecutionException ignored
+        ) {
             System.out.println("FAILED TO SOLVE IN DUE TIME");
             solutionFuture.cancel(true);
         } finally {
@@ -79,28 +86,26 @@ public class BoardRobot {
                 capture,
                 "png",
                 Paths.get("solved_boards")
-                     .resolve(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC) + ".png")
-                     .toFile()
+                        .resolve( LocalDateTime.now().toEpochSecond(ZoneOffset.UTC) + ".png" )
+                        .toFile()
         );
     }
 
     private BufferedImage screenCapture() {
-        return robot.createScreenCapture(new Rectangle(Toolkit.getDefaultToolkit()
-                                                              .getScreenSize()));
+        return robot.createScreenCapture( new Rectangle(Toolkit.getDefaultToolkit().getScreenSize()) );
     }
 
-    private List<Board.Move> getSolution(final Board board, final BoardSolver boardSolver) throws InterruptedException {
+    private List<Board.Move> getSolution( final Board board, final BoardSolver boardSolver ) throws InterruptedException {
         return boardSolver.solve(board);
     }
 
     public void executeSolution(final List<Board.Move> solution) {
         for (final Board.Move move : solution) {
             final List<Hex> hexes = getHexes(move);
-
             for (final Hex hex : hexes) {
                 robot.mouseMove(screenX(hex), screenY(hex));
                 click();
-                robot.delay(10);
+                robot.delay(30);
             }
         }
     }
@@ -131,10 +136,10 @@ public class BoardRobot {
     }
 
     public static int screenX(final Hex hex) {
-        return ImageUtil.X_START + (ImageUtil.SIZE + ImageUtil.X_DIST) * hex.getHexX() - hex.getHexY() * ImageUtil.X_OFFSET + ImageUtil.SIZE / 2;
+        return ( ImageUtil.X_START + (ImageUtil.SIZE + ImageUtil.X_DIST) * hex.getHexX() - hex.getHexY() * ImageUtil.X_OFFSET + ImageUtil.SIZE / 2 );
     }
 
     public static int screenY(final Hex hex) {
-        return ImageUtil.Y_START + (ImageUtil.SIZE + ImageUtil.Y_DIST) * hex.getHexY() + ImageUtil.SIZE / 2;
+        return ( ImageUtil.Y_START + (ImageUtil.SIZE + ImageUtil.Y_DIST) * hex.getHexY() + ImageUtil.SIZE / 2 );
     }
 }

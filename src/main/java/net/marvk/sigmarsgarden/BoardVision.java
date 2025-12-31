@@ -1,12 +1,15 @@
 package net.marvk.sigmarsgarden;
 
+import java.awt.image.BufferedImage;
+import java.util.HashMap;
+import java.util.Map;
 import org.opencv.core.Core;
+import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.imgproc.Imgproc;
 
-import java.awt.image.BufferedImage;
-
 public class BoardVision {
+
     public Board readBoard(final BufferedImage image) {
         final BufferedImage[][] board = ImageUtil.split(image);
 
@@ -17,31 +20,60 @@ public class BoardVision {
             result[i] = new Tile[tiles.length];
             for (int j = 0; j < tiles.length; j++) {
                 final BufferedImage tile = tiles[j];
-                result[i][j] = bestFit(tile);
+                result[i][j] = bestFitDebug(tile, i, j);
             }
         }
 
         return new Board(result);
     }
 
-    private static Tile bestFit(final BufferedImage bufferedImage) {
+    private static Tile bestFitDebug(
+        final BufferedImage bufferedImage,
+        int row,
+        int col
+    ) {
         final Mat base = ImageUtil.bufferedImageToMat(bufferedImage);
 
         double bestScore = Double.NEGATIVE_INFINITY;
         Tile bestTile = null;
+        Map<Tile, Double> scores = new HashMap<>();
 
         for (final Tile tile : Tile.values()) {
-            final Mat[] mats = {tile.getInactiveMat(), tile.getActiveMat()};
+            final Mat[] mats = { tile.getInactiveMat(), tile.getActiveMat() };
 
+            double tileBestScore = Double.NEGATIVE_INFINITY;
             for (int i = 0; i < 2; i++) {
                 final double score = compare(base, mats[i]);
+                tileBestScore = Math.max(tileBestScore, score);
+            }
 
-                if (score > bestScore) {
-                    bestScore = score;
-                    bestTile = tile;
-                }
+            scores.put(tile, tileBestScore);
+
+            if (tileBestScore > bestScore) {
+                bestScore = tileBestScore;
+                bestTile = tile;
             }
         }
+
+        System.out.printf(
+            "Tile at [%d,%d] - Best: %s (%.4f)%n",
+            row,
+            col,
+            bestTile,
+            bestScore
+        );
+        scores
+            .entrySet()
+            .stream()
+            .sorted((a, b) -> Double.compare(b.getValue(), a.getValue()))
+            .limit(3)
+            .forEach(entry ->
+                System.out.printf(
+                    "  %s: %.4f%n",
+                    entry.getKey(),
+                    entry.getValue()
+                )
+            );
 
         return bestTile;
     }
@@ -49,7 +81,12 @@ public class BoardVision {
     private static double compare(final Mat mat1, final Mat mat2) {
         final Mat score = new Mat();
 
-        Imgproc.matchTemplate(adjust(mat1), adjust(mat2), score, Imgproc.TM_CCOEFF_NORMED);
+        Imgproc.matchTemplate(
+            adjust(mat1),
+            adjust(mat2),
+            score,
+            Imgproc.TM_CCOEFF_NORMED
+        );
 
         return Core.minMaxLoc(score).maxVal;
     }
@@ -59,22 +96,23 @@ public class BoardVision {
 
         Imgproc.equalizeHist(input, equalized);
 
-        for (int j = 0; j < equalized.rows(); j++) {
-            for (int i = 0; i < equalized.cols(); i++) {
-                final double[] pixel = equalized.get(j, i);
-
-                pixel[0] = clamp(0, 255, 255 - Math.pow((Math.max(230 - pixel[0], 0)), 1.1));
-                pixel[0] = clamp(0, 255, 255 - Math.pow((Math.max(255 - pixel[0], 0)), 1.1));
-                pixel[0] = clamp(0, 255, 255 - Math.pow((Math.max(255 - pixel[0], 0)), 1.1));
-
-                equalized.put(j, i, pixel);
-            }
-        }
-
-        return equalized;
+        return adjustMethod(equalized);
     }
 
-    private static double clamp(final double min, final double max, final double value) {
-        return Math.max(Math.min(value, max), min);
+    private static Mat adjustMethod(final Mat input) {
+        final Mat blurred = new Mat();
+        final Mat edges = new Mat();
+
+        Imgproc.GaussianBlur(input, blurred, new org.opencv.core.Size(3, 3), 0);
+
+        Imgproc.Laplacian(blurred, edges, CvType.CV_32F, 3);
+
+        final Mat edges8u = new Mat();
+        Core.convertScaleAbs(edges, edges8u);
+
+        final Mat result = new Mat();
+        Core.addWeighted(input, 0.7, edges8u, 0.3, 0, result);
+
+        return result;
     }
 }

@@ -1,19 +1,18 @@
 package net.marvk.sigmarsgarden;
 
-import lombok.SneakyThrows;
-import org.opencv.core.Mat;
-import org.opencv.core.MatOfByte;
-import org.opencv.imgcodecs.Imgcodecs;
-
-import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.file.Path;
+import javax.imageio.ImageIO;
+import org.opencv.core.Mat;
+import org.opencv.core.MatOfByte;
+import org.opencv.imgcodecs.Imgcodecs;
 
 public class ImageUtil {
+
     public static final int SIZE = 52;
     public static final int X_OFFSET = 33;
     public static final int X_DIST = 14;
@@ -24,25 +23,38 @@ public class ImageUtil {
     private static final int ROWS = 11;
 
     private ImageUtil() {
-        throw new AssertionError("No instances of utility class " + ImageUtil.class);
+        throw new AssertionError(
+            "No instances of utility class " + ImageUtil.class
+        );
     }
 
-    @SneakyThrows
     public static Mat bufferedImageToMat(final BufferedImage image) {
-        final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        ImageIO.write(image, "png", byteArrayOutputStream);
-        byteArrayOutputStream.flush();
-        return Imgcodecs.imdecode(new MatOfByte(byteArrayOutputStream.toByteArray()), Imgcodecs.IMREAD_UNCHANGED);
+        final ByteArrayOutputStream byteArrayOutputStream =
+            new ByteArrayOutputStream();
+        try {
+            ImageIO.write(image, "png", byteArrayOutputStream);
+            byteArrayOutputStream.flush();
+            return Imgcodecs.imdecode(
+                new MatOfByte(byteArrayOutputStream.toByteArray()),
+                Imgcodecs.IMREAD_UNCHANGED
+            );
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    @SneakyThrows
     public static BufferedImage matToBufferedImage(final Mat mat) {
         final MatOfByte matOfByte = new MatOfByte();
         Imgcodecs.imencode(".jpg", mat, matOfByte);
-        return ImageIO.read(new ByteArrayInputStream(matOfByte.toArray()));
+        try {
+            return ImageIO.read(new ByteArrayInputStream(matOfByte.toArray()));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    public static BufferedImage loadImageMonochrome(final Path path) throws IOException {
+    public static BufferedImage loadImageMonochrome(final Path path)
+        throws IOException {
         return monochrome(loadImage(path));
     }
 
@@ -51,11 +63,20 @@ public class ImageUtil {
     }
 
     public static BufferedImage shrink(final BufferedImage bufferedImage) {
-        return bufferedImage.getSubimage(PADDING, PADDING, bufferedImage.getWidth() - PADDING * 2, bufferedImage.getHeight() - PADDING * 2);
+        return bufferedImage.getSubimage(
+            PADDING,
+            PADDING,
+            bufferedImage.getWidth() - PADDING * 2,
+            bufferedImage.getHeight() - PADDING * 2
+        );
     }
 
     public static BufferedImage monochrome(final BufferedImage read) {
-        final BufferedImage result = new BufferedImage(read.getWidth(), read.getHeight(), BufferedImage.TYPE_BYTE_GRAY);
+        final BufferedImage result = new BufferedImage(
+            read.getWidth(),
+            read.getHeight(),
+            BufferedImage.TYPE_BYTE_GRAY
+        );
 
         final Graphics2D graphics = result.createGraphics();
         graphics.drawImage(read, 0, 0, null);
@@ -64,7 +85,11 @@ public class ImageUtil {
     }
 
     public static BufferedImage toImage(final Tile[][] tiles) {
-        final BufferedImage result = new BufferedImage(1920, 1080, BufferedImage.TYPE_INT_ARGB);
+        final BufferedImage result = new BufferedImage(
+            1920,
+            1080,
+            BufferedImage.TYPE_INT_ARGB
+        );
         final Graphics2D graphics = result.createGraphics();
         for (int y = 0; y < ROWS; y++) {
             final int rowOffset = rowOffset(y);
@@ -75,7 +100,12 @@ public class ImageUtil {
             for (int x = 0; x < xMax; x++) {
                 final int xPixel = xPixel(rowOffset, x);
 
-                graphics.drawImage(tiles[y][x].getActive(), xPixel, yPixel, null);
+                graphics.drawImage(
+                    tiles[y][x].getActive(),
+                    xPixel,
+                    yPixel,
+                    null
+                );
             }
         }
 
@@ -83,7 +113,11 @@ public class ImageUtil {
     }
 
     public static BufferedImage toImage(final Mat[][] mats) {
-        final BufferedImage result = new BufferedImage(1920, 1080, BufferedImage.TYPE_INT_ARGB);
+        final BufferedImage result = new BufferedImage(
+            1920,
+            1080,
+            BufferedImage.TYPE_INT_ARGB
+        );
         final Graphics2D graphics = result.createGraphics();
         for (int y = 0; y < ROWS; y++) {
             final int rowOffset = rowOffset(y);
@@ -94,7 +128,12 @@ public class ImageUtil {
             for (int x = 0; x < xMax; x++) {
                 final int xPixel = xPixel(rowOffset, x);
 
-                graphics.drawImage(ImageUtil.matToBufferedImage(mats[y][x]), PADDING + xPixel, PADDING + yPixel, null);
+                graphics.drawImage(
+                    ImageUtil.matToBufferedImage(mats[y][x]),
+                    PADDING + xPixel,
+                    PADDING + yPixel,
+                    null
+                );
             }
         }
 
@@ -102,7 +141,11 @@ public class ImageUtil {
     }
 
     public static BufferedImage toImage(final BufferedImage[][] images) {
-        final BufferedImage result = new BufferedImage(1920, 1080, BufferedImage.TYPE_INT_ARGB);
+        final BufferedImage result = new BufferedImage(
+            1920,
+            1080,
+            BufferedImage.TYPE_INT_ARGB
+        );
         final Graphics2D graphics = result.createGraphics();
         for (int y = 0; y < ROWS; y++) {
             final int rowOffset = rowOffset(y);

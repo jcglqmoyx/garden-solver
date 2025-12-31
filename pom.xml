@@ -8,7 +8,7 @@
     <artifactId>sigmars-garden-solver</artifactId>
     <version>0.1.0</version>
 
-    <name>Opus Magnum's Sigmar's Garden Autosolver</name>
+    <name>Opus Magnum: Sigmar's Garden Auto-Solver</name>
     <url>https://github.com/marvk/sigmarsgarden</url>
     <inceptionYear>2021</inceptionYear>
 
@@ -29,7 +29,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-        <java.version>15</java.version>
+        <java.version>17</java.version>
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
     </properties>

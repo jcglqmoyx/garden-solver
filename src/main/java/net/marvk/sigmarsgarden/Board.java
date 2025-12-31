@@ -7,8 +7,21 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class Board {
-    private static final Tile[] ELEMENTS = {Tile.FIRE, Tile.WATER, Tile.AIR, Tile.EARTH};
-    private static final Tile[] METALS = {Tile.TIN, Tile.LEAD, Tile.IRON, Tile.COPPER, Tile.SILVER, Tile.GOLD};
+
+    private static final Tile[] ELEMENTS = {
+        Tile.FIRE,
+        Tile.WATER,
+        Tile.AIR,
+        Tile.EARTH,
+    };
+    private static final Tile[] METALS = {
+        Tile.TIN,
+        Tile.LEAD,
+        Tile.IRON,
+        Tile.COPPER,
+        Tile.SILVER,
+        Tile.GOLD,
+    };
 
     private final Tile[][] board;
 
@@ -30,20 +43,6 @@ public class Board {
         }
 
         return true;
-    }
-
-    public int numTiles() {
-        int sum = 0;
-
-        for (final Tile[] tiles : board) {
-            for (final Tile tile : tiles) {
-                if (tile != Tile.EMPTY) {
-                    sum++;
-                }
-            }
-        }
-
-        return sum;
     }
 
     public List<Hex> playableHexes() {
@@ -79,7 +78,9 @@ public class Board {
     }
 
     public boolean has(final Tile query) {
-        return Arrays.stream(board).flatMap(Arrays::stream).anyMatch(tile -> query == tile);
+        return Arrays.stream(board)
+            .flatMap(Arrays::stream)
+            .anyMatch(tile -> query == tile);
     }
 
     private boolean isPlayable(final Hex hex) {
@@ -175,7 +176,9 @@ public class Board {
                         for (int m = l + 1; m < hexes.size(); m++) {
                             final Hex hex5 = hexes.get(m);
 
-                            final Move fiveMove = new Move(List.of(hex1, hex2, hex3, hex4, hex5));
+                            final Move fiveMove = new Move(
+                                List.of(hex1, hex2, hex3, hex4, hex5)
+                            );
 
                             if (validFiveMove(fiveMove)) {
                                 result.add(fiveMove);
@@ -236,12 +239,10 @@ public class Board {
             return false;
         }
 
-        return Stream.concat(Arrays.stream(ELEMENTS), Stream.of(Tile.UNIVERSAL))
-                     .allMatch(move.tiles::contains);
-    }
-
-    private List<Tile> getTiles(final Move move) {
-        return getTiles(move.hexes);
+        return Stream.concat(
+            Arrays.stream(ELEMENTS),
+            Stream.of(Tile.UNIVERSAL)
+        ).allMatch(move.tiles::contains);
     }
 
     private List<Tile> getTiles(final List<Hex> hexes) {
@@ -250,8 +251,7 @@ public class Board {
 
     public void doMove(final Move move) {
         final List<Hex> hexes = move.hexes;
-        for (int i = 0; i < hexes.size(); i++) {
-            final Hex hex = hexes.get(i);
+        for (final Hex hex : hexes) {
             set(hex, Tile.EMPTY);
         }
     }
@@ -288,13 +288,12 @@ public class Board {
 
         @Override
         public String toString() {
-            return "Move{" +
-                    "hexes=" + hexes +
-                    '}';
+            return "Move{" + "hexes=" + hexes + '}';
         }
     }
 
     public class Hash {
+
         private final long l1;
         private final long l2;
 
@@ -312,7 +311,6 @@ public class Board {
                         } else {
                             l2 |= 1L << (index - 64);
                         }
-
                     }
 
                     index++;
@@ -336,18 +334,14 @@ public class Board {
 
         @Override
         public int hashCode() {
-            int result = (int) (l1 ^ (l1 >>> 32));
-            result = 31 * result + (int) (l2 ^ (l2 >>> 32));
+            int result = Long.hashCode(l1);
+            result = 31 * result + Long.hashCode(l2);
             return result;
         }
 
         @Override
         public String toString() {
-            return "Hash{" +
-                    "l1=" + l1 +
-                    ", l2=" + l2 +
-                    '}';
+            return "Hash{" + "l1=" + l1 + ", l2=" + l2 + '}';
         }
     }
-
 }
