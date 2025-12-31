@@ -37,16 +37,16 @@ public class Hex {
         };
     }
 
-    public static Hex fromHexCoords(final int x, final int y) {
+    public static Hex fromHexCoordinates(final int x, final int y) {
         return new Hex(x, y);
     }
 
-    public static Hex fromArrayCoords(final int x, final int y) {
-        return new Hex(convertXfromArrayToHex(x, y), y);
+    public static Hex fromArrayCoordinates(final int x, final int y) {
+        return new Hex(convertFromArrayToHex(x, y), y);
     }
 
     public Hex translate(final int dx, final int dy) {
-        return fromHexCoords(x + dx, y + dy);
+        return fromHexCoordinates(x + dx, y + dy);
     }
 
     private static int convertXFromHexToArray(final int x, final int y) {
@@ -57,19 +57,15 @@ public class Hex {
         return x - y + 5;
     }
 
-    private static int convertXfromArrayToHex(final int x, final int y) {
+    private static int convertFromArrayToHex(final int x, final int y) {
         if (y < 6) {
             return x;
         }
-
         return x + y - 5;
     }
 
     @Override
     public String toString() {
-        return "Hex{" +
-                "x=" + x +
-                ", y=" + y +
-                '}';
+        return "Hex{" + "x=" + x + ", y=" + y + '}';
     }
 }

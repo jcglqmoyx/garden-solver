@@ -58,7 +58,7 @@ public class Board {
                     continue;
                 }
 
-                final Hex hex = Hex.fromArrayCoords(x, y);
+                final Hex hex = Hex.fromArrayCoordinates(x, y);
 
                 if (isPlayable(hex)) {
                     result.add(hex);
